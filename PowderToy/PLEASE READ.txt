@@ -1,4 +1,4 @@
-to switch between elements press "TAB"
+to switch between elements press "Left Arrow / Right Arrow"
 
 empty space - [void]
 particles - [dust,stone,snow,concrete,salt,broken metal,yeast,fuse powder,broken glass,freeze,gravity, anti-air particle,broken quartz,broken electronics,clay dust,sawdust]
