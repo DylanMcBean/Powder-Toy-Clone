@@ -43,30 +43,6 @@ void setup() {
 }
 
 void draw() {
-  if (particleAmount < 10 && spawnAmount < goal && grid[spawnX] == 0) {
-    if (frameCount % 2 == 0) {
-      grid[spawnX] = particle;
-      particleAmount ++;
-      spawnAmount ++;
-      error = 0;
-    }
-  } else if (particleAmount < 10 && error == 3) {
-    error = 0;
-    spawnX = int(random(width));
-    goal = int(random(1000));
-    spawnAmount = 0;
-    particle = floor(random(1, particles.Amount));
-  } else if (error < 3) {
-    error ++;
-  } else {
-    //int parts = 0;
-    //for (int i = 0; i < grid.length; i ++) {
-    //  if (grid[i] != 0) {
-    //    parts++;
-    //  }
-    //}
-    //print("Particles:"+parts);
-  }
   background(0);
   loadPixels();
   for (int i = grid.length - 1; i >= 0; i --) {
