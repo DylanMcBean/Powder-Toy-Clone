@@ -1,0 +1,10 @@
+to switch between elements press "TAB"
+
+empty space - [void]
+particles - [dust,stone,snow,concrete,salt,broken metal,yeast,fuse powder,broken glass,freeze,gravity, anti-air particle,broken quartz,broken electronics,clay dust,sawdust]
+liquids - [water]
+gasses - Null
+
+if you find any bugs or want a feature added. please message @PyroDeathAdder(Pyro)#1580 on discord
+if requested i will make a discord server for this
+have fun:)
