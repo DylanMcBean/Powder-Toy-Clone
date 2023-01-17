@@ -1,17 +1,10 @@
-Particles particles; //<>//
-int[] grid; 
-int particleAmount = 0;
-int spawnAmount = 0;
-int goal = int(random(1000));
-int particle;
-int spawnX = int(random(width));
-float error = 0;
+Particles particles;
+int[] grid;
 int placing = 0;
+int size = 1;
 void setup() {
-  //size(1280,720);
-  size(629, 424);
-  //fullScreen(2);
-
+  size(1280,720);
+  
   particles = new Particles(20);
   //Setting Particle Data
   particles.add(0, "void", color(0, 0, 0), 0, 0, false);
@@ -37,8 +30,7 @@ void setup() {
 
   //Setting grid
   grid = new int[width*height];
-  particle = floor(random(1, particles.Amount));
-  frameRate(60);
+  frameRate(100000);
   textSize(20);
 }
 
@@ -55,26 +47,43 @@ void draw() {
   }
   updatePixels();
   fill(255, 200);
+  
+  text("Size: " + size,5,20);
+  text("Selected: " + particles.types[placing],5,40);
   if (mouseX > 0 && mouseX < width & mouseY > 0 && mouseY < height) {
-  String text = particles.types[grid[mouseX+mouseY*width]];
+    String text = particles.types[grid[mouseX+mouseY*width]];
     if (text != "void") {
-      text(text, 10, 50);
+      text("Over: " + text, 5, 60);
     }
   }
-  text(particles.types[placing],10,20);
   
   if (mousePressed) {
     if (mouseX > 0 && mouseX < width & mouseY > 0 && mouseY < height) {
-      grid[mouseX+(mouseY+1)*width] = placing;
+      for (int i = -size; i < size; i ++) {
+        for (int j = -size; j < size; j ++) {
+          if (mouseX + i >= 0 && mouseX + i < width && mouseY + j >= 0 && mouseY + j < height) {
+            grid[(mouseX+i)+((mouseY+j))*width] = placing;
+          }
+        }
+      }
     }
   }
 }
 
 void keyPressed() {
-  if (keyCode == LEFT) {
-   placing = (placing + particles.Amount - 1)%particles.Amount; 
-  } else if (keyCode == RIGHT) {
-   placing = (placing + 1)%particles.Amount; 
+  switch (keyCode) {
+    case LEFT:
+      placing = (placing - 1 + particles.Amount) % particles.Amount; 
+      break;
+    case RIGHT:
+      placing = (placing + 1) % particles.Amount; 
+      break;
+    case UP:
+      size = min(10, size + 1); 
+      break;
+    case DOWN:
+      size = max(0, size - 1); 
+      break;
   }
 }
 
@@ -110,7 +119,7 @@ void updateParticle(int index) {
     } else if (grid[index+width] == 0 || particles.Mass[grid[index+width]] < particles.Mass[grid[index]]) {
         fallDown(index);
     } else if (particles.Liquid[grid[index]] == true) {
-      if (random(1) < 0.5) {
+      if (random(1) < 0.5 && index != 0) {
         if (grid[index-1] == 0) {
           moveLeft(index);
         }
@@ -124,118 +133,83 @@ void updateParticle(int index) {
 }
 
 void fallDown(int index) {
-  for (int i = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20))); i >= 0; i--) {
-    if (index+(width*i) < grid.length) {
-      if (grid[index+(width*i)] == 0) {
-        grid[index+(width*i)] = grid[index];
-        grid[index] = 0;
-      } else {
-        int dummy = grid[index+(width*i)]; 
-        grid[index+(width*i)] = grid[index];
-        grid[index] = dummy;
-      }
+  int pixelsToMove = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20)));
+  int offset = width * pixelsToMove;
+  if (index + offset < grid.length) {
+    if (grid[index + offset] == 0) {
+      grid[index + offset] = grid[index];
+      grid[index] = 0;
+    } else {
+      int dummy = grid[index + offset]; 
+      grid[index + offset] = grid[index];
+      grid[index] = dummy;
     }
   }
 }
 
 void moveLeft(int index) {
-  for (int i = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.5, 5)*map(particles.Gravity[grid[index]], 0, 1, 10, 20))); i >= 0; i--) {
-    if (index-i < grid.length) {
-      if (index-i != -1) {
-        if (grid[index-i] == 0) {
-          grid[index-i] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index-i]; 
-          grid[index-i] = grid[index];
-          grid[index] = dummy;
-        }
-      } else {
-        if (grid[index+width-i] == 0) {
-          grid[index+width-i] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index+width-i]; 
-          grid[index+width-i] = grid[index];
-          grid[index] = dummy;
-        }
-      }
-    }
+  float gravity = particles.Gravity[grid[index]];
+  int moveAmount = floor(random(map((1 / (1 + exp(-gravity))), 0.5, 0.8, 0.5, 5)*map(gravity, 0, 1, 10, 20)));
+  for (int i = moveAmount; i >= 0; i--) {
+    int movedIndex = (index-i > 0) ? index-i : index+width-i;
+    if (grid[movedIndex] == 0) {
+      grid[movedIndex] = grid[index];
+      grid[index] = 0;
+    } else {
+      int dummy = grid[movedIndex]; 
+      grid[movedIndex] = grid[index];
+      grid[index] = dummy;
+    }  
   }
 }
 
 void moveRight(int index) {
-  for (int i = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.5, 5)*map(particles.Gravity[grid[index]], 0, 1, 10, 20))); i >= 0; i--) {
-    if (index+i < grid.length) {
-        if (grid[index+i] == 0) {
-          grid[index+i] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index+i]; 
-          grid[index+i] = grid[index];
-          grid[index] = dummy;
-        }
-      } else {
-        if (grid[index-width+i] == 0) {
-          grid[index-width+i] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index-width+i]; 
-          grid[index-width+i] = grid[index];
-          grid[index] = dummy;
-        }
+  float gravity = particles.Gravity[grid[index]];
+  int moveAmount = floor(random(map((1 / (1 + exp(-gravity))), 0.5, 0.8, 0.5, 5)*map(gravity, 0, 1, 10, 20)));
+  for (int i = moveAmount; i >= 0; i--) {
+    int movedIndex = (index+i < grid.length) ? index+i : index-width+i;
+    if (grid[movedIndex] == 0) {
+      grid[movedIndex] = grid[index];
+      grid[index] = 0;
+    } else {
+      int dummy = grid[movedIndex]; 
+      grid[movedIndex] = grid[index];
+      grid[index] = dummy;
     }  
   }
 }
 
 void fallDownLeft(int index) {
-  for (int i = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20))); i >= 0; i--) {
-    if (index+(width*i)-1 < grid.length) {
-      if (index+(width*i)-1 != -1) {
-        if (grid[index+(width*i)-1] == 0) {
-          grid[index+(width*i)-1] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index+(width*i)-1]; 
-          grid[index+(width*i)-1] = grid[index];
-          grid[index] = dummy;
-        }
-      } else {
-        if (grid[index+(width*(i+1))-1] == 0) {
-          grid[index+(width*(i+1))-1] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index+(width*(i+1))-1]; 
-          grid[index+(width*(i+1))-1] = grid[index];
-          grid[index] = dummy;
-        }
-      }
+  int numIterations = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20)));
+  int nextIndex = index+(width*numIterations)-1;
+  if (nextIndex < 0) {
+    nextIndex = index-(width*numIterations)-1;
+  }
+  if (nextIndex >= 0 && nextIndex < grid.length) {
+    if (grid[nextIndex] == 0) {
+      grid[nextIndex] = grid[index];
+      grid[index] = 0;
+    } else {
+      int dummy = grid[nextIndex]; 
+      grid[nextIndex] = grid[index];
+      grid[index] = dummy;
     }
   }
 }
 
+
 void fallDownRight(int index) {
-  for (int i = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20))); i >= 0; i--) {
-    if (index+(width*i)+1 < grid.length) {
-      if (index+(width*i)+1 != grid.length) {
-        if (grid[index+(width*i)+1] == 0) {
-          grid[index+(width*i)+1] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index+(width*i)+1]; 
-          grid[index+(width*i)+1] = grid[index];
-          grid[index] = dummy;
-        }
-      } else {
-        if (grid[index-(width*i)+1] == 0) {
-          grid[index-(width*i)+1] = grid[index];
-          grid[index] = 0;
-        } else {
-          int dummy = grid[index-(width*i)+1]; 
-          grid[index-(width*i)+1] = grid[index];
-          grid[index] = dummy;
-        }
-      }
-    }
+  int numIterations = floor(random(map((1 / (1 + exp(-particles.Gravity[grid[index]]))), 0.5, 0.8, 0.2, 2)*map(particles.Gravity[grid[index]], 0, 1, 10, 20)));
+  int nextIndex = index+(width*numIterations)+1;
+  if (nextIndex >= grid.length) {
+    nextIndex = index-(width*numIterations)+1;
+  }
+  if (grid[nextIndex] == 0) {
+    grid[nextIndex] = grid[index];
+    grid[index] = 0;
+  } else {
+    int dummy = grid[nextIndex]; 
+    grid[nextIndex] = grid[index];
+    grid[index] = dummy;
   }
 }
